@@ -2,12 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>African Generative Art</title>
 
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <link rel="preload" href="DMSans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/addons/p5.sound.min.js"></script>
@@ -16,8 +17,207 @@
     <script src="https://cdn.jsdelivr.net/npm/tweakpane@3.1.10/dist/tweakpane.min.js"></script>
   </head>
   <body>
-    <h1>Howdy!</h1>
-    <!-- TO SWITCH SKETCHES: change the filename below -->
-    <script src="adinkra_offset_gutter_grid.js"></script>
+    <aside id="hud" aria-label="Sketch Switcher and Controls">
+      <div class="hud-head">
+        <span class="hud-title">African Generative Art</span>
+        <div class="hud-head-actions">
+          <a class="hud-link" href="https://github.com/0xadett/african-generative-art" target="_blank" rel="noopener">GitHub</a>
+          <button type="button" class="hud-toggle" id="hud-toggle" title="Collapse or expand panel">_</button>
+        </div>
+      </div>
+
+      <div class="hud-body">
+        <div class="hud-nav">
+          <button type="button" class="hud-btn" id="prev-btn" title="Previous sketch">&larr;</button>
+          <select id="sketch-select" aria-label="Select sketch"></select>
+          <button type="button" class="hud-btn" id="next-btn" title="Next sketch">&rarr;</button>
+        </div>
+
+        <p class="hud-desc" id="sketch-desc"></p>
+
+        <div class="hud-controls" id="sketch-controls"></div>
+        <div class="hud-palettes" id="sketch-palettes"></div>
+      </div>
+    </aside>
+
+    <script>
+      (function () {
+        var SKETCHES = [
+          {
+            file: "adinkra_offset_gutter_grid.js",
+            title: "Day 2B: Adinkra Offset + Gutter Grid",
+            desc: "Akan Adinkra symbols arranged in a proportional offset and gutter grid with tinted cell backgrounds.",
+            palettes: 6,
+            controls: [
+              { label: "R · Seed", key: "r" },
+              { label: "S · Save PNG", key: "s" }
+            ]
+          },
+          {
+            file: "kente_cloth_generator.js",
+            title: "Day 1: Asante Kente Cloth",
+            desc: "Seeded woven geometric strips inspired by Asante Kente cloth using local coordinate transforms.",
+            palettes: 0,
+            controls: [
+              { label: "R · Seed", key: "r" },
+              { label: "S · Save PNG", key: "s" }
+            ]
+          },
+          {
+            file: "adinkra_symbol_field.js",
+            title: "Day 2: Adinkra Symbol Field",
+            desc: "Procedural Dwennimmen, Gye Nyame, Sankofa, Nyame Dua, and Fawohodie motifs built from polygons and arcs.",
+            palettes: 6,
+            controls: [
+              { label: "R · Seed", key: "r" },
+              { label: "S · Save PNG", key: "s" }
+            ]
+          },
+          {
+            file: "adire_resist_dye_noise.js",
+            title: "Day 3: Yoruba Adire Resist-Dye",
+            desc: "Animated 3D Perlin noise simulating indigo wax (Eleko) and tied raffia (Oniko) resist-dye patterns.",
+            palettes: 4,
+            paletteLabel: "Styles:",
+            controls: [
+              { label: "Space · Pause", key: " " },
+              { label: "R · Seed", key: "r" },
+              { label: "S · Save PNG", key: "s" }
+            ]
+          },
+          {
+            file: "asooke_flow_field.js",
+            title: "Day 4: Yoruba Aso-Oke Flow Field",
+            desc: "Particle threads flowing across a Perlin noise vector field inspired by woven Aso-Oke strips (click canvas for burst).",
+            palettes: 5,
+            controls: [
+              { label: "Space · Pause", key: " " },
+              { label: "R · Seed", key: "r" },
+              { label: "S · Save PNG", key: "s" }
+            ]
+          },
+          {
+            file: "osun_rose_curve_mandala.js",
+            title: "Day 5: Osun Sacred Geometry",
+            desc: "Parametric rose curves and layered spirals inspired by the Osun-Osogbo Sacred Grove (click to recenter).",
+            palettes: 5,
+            controls: [
+              { label: "Space · Pause", key: " " },
+              { label: "R · Random", key: "r" },
+              { label: "S · Save PNG", key: "s" }
+            ]
+          },
+          {
+            file: "ibeji_dumbbell_mandala.js",
+            title: "Sketch 8: Ibeji Dumbbell Mandala",
+            desc: "Concentric polar mandala of Yoruba twin (Ibeji) dumbbell motifs with seeded variation.",
+            palettes: 4,
+            controls: [
+              { label: "Space · Spin", key: " " },
+              { label: "R · Seed", key: "r" },
+              { label: "S · Save PNG", key: "s" }
+            ]
+          },
+          {
+            file: "geometric_dumbbell_grid.js",
+            title: "Sketch 9: Geometric Dumbbell Grid",
+            desc: "Tiled geometric dumbbell motif grid with live Tweakpane controls (top-right) and MP4 capture.",
+            palettes: 4,
+            controls: [
+              { label: "A · Animate", key: "a" },
+              { label: "C · Capture", key: "c" },
+              { label: "S · Save PNG", key: "s" }
+            ]
+          },
+          {
+            file: "inspo.js",
+            title: "Grid Study: Offset & Inner Margins",
+            desc: "Proportional 8x8 grid experiment exploring outer offset, inner gutters, and grainy HSB textures.",
+            palettes: 0,
+            controls: []
+          }
+        ];
+
+        var params = new URLSearchParams(window.location.search);
+        var requested = params.get("sketch");
+        var activeIndex = SKETCHES.findIndex(function (s) { return s.file === requested; });
+        if (activeIndex < 0) activeIndex = 0;
+        var active = SKETCHES[activeIndex];
+
+        var hud = document.getElementById("hud");
+        var toggleBtn = document.getElementById("hud-toggle");
+        var selectEl = document.getElementById("sketch-select");
+        var prevBtn = document.getElementById("prev-btn");
+        var nextBtn = document.getElementById("next-btn");
+        var descEl = document.getElementById("sketch-desc");
+        var controlsEl = document.getElementById("sketch-controls");
+        var palettesEl = document.getElementById("sketch-palettes");
+
+        hud.addEventListener("mousedown", function (e) { e.stopPropagation(); });
+        hud.addEventListener("click", function (e) { e.stopPropagation(); });
+
+        toggleBtn.addEventListener("click", function () {
+          var collapsed = hud.classList.toggle("collapsed");
+          toggleBtn.textContent = collapsed ? "+" : "_";
+        });
+
+        SKETCHES.forEach(function (item, idx) {
+          var opt = document.createElement("option");
+          opt.value = item.file;
+          opt.textContent = item.title;
+          if (idx === activeIndex) opt.selected = true;
+          selectEl.appendChild(opt);
+        });
+
+        function goTo(idx) {
+          var target = SKETCHES[(idx + SKETCHES.length) % SKETCHES.length];
+          window.location.search = "?sketch=" + encodeURIComponent(target.file);
+        }
+
+        selectEl.addEventListener("change", function () {
+          window.location.search = "?sketch=" + encodeURIComponent(selectEl.value);
+        });
+        prevBtn.addEventListener("click", function () { goTo(activeIndex - 1); });
+        nextBtn.addEventListener("click", function () { goTo(activeIndex + 1); });
+
+        descEl.textContent = active.desc;
+
+        function triggerSketchKey(k) {
+          if (typeof window.keyPressed === "function") {
+            window.key = k;
+            window.keyPressed();
+          }
+        }
+
+        active.controls.forEach(function (ctrl) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "hud-btn";
+          b.textContent = ctrl.label;
+          b.addEventListener("click", function () { triggerSketchKey(ctrl.key); });
+          controlsEl.appendChild(b);
+        });
+
+        if (active.palettes > 0) {
+          var lbl = document.createElement("span");
+          lbl.className = "hud-pal-lbl";
+          lbl.textContent = active.paletteLabel || "Palettes:";
+          palettesEl.appendChild(lbl);
+
+          for (var p = 1; p <= active.palettes; p++) {
+            (function (numStr) {
+              var pb = document.createElement("button");
+              pb.type = "button";
+              pb.className = "hud-btn";
+              pb.textContent = numStr;
+              pb.addEventListener("click", function () { triggerSketchKey(numStr); });
+              palettesEl.appendChild(pb);
+            })(String(p));
+          }
+        }
+
+        document.write('<script src="' + active.file + '"><\/script>');
+      })();
+    </script>
   </body>
 </html>
